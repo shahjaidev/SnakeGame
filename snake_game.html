@@ -1,0 +1,329 @@
+<html>
+   <head>
+     <title> My Snake Game </title>
+   </head>
+   <body bgcolor="lightblue">
+      <canvas id="myCanvas" width="400" height="400"> </canvas>
+      <br />
+     
+       <p>Use the up/down/left/right arrow keys to direct the snake to the red food boxes. Consuming a food box will make the snake 5 boxes longer and grant you a point. To pause, press space </p>
+      <p id="Score"><font size="15"> Score: 0</font><br />
+    
+       <p id="Status">
+         <font size="25"> Game not started </font><br />
+   </body>
+   <script>
+
+
+    canv=document.getElementById("myCanvas");
+    
+       
+    ctx=canv.getContext("2d");
+    ctx.strokeRect(0, 0, myCanvas.width, myCanvas.height);
+    
+       
+       //Here, you can initialise starting coordinates of red box and snake 
+    redbox_X=30;
+    redbox_Y=30;
+       
+    inital_X = 10;
+    inital_Y = 10;
+       
+    
+    snake_arr = [{x: inital_X, y: inital_Y}];
+  
+    gameStarted = false;
+    total_score = 0;
+    game_paused = false;
+    gameOver = false;
+       
+         current_dir = 1;
+    turning = false;
+       
+    dx=0;
+    dy=0;
+  
+       
+
+    window.onload = function() {
+
+        ctx.fillStyle="black";
+        ctx.fillRect(0,0,myCanvas.width,myCanvas.height);  
+
+        document.addEventListener("keydown", keyPushed);
+
+        window.addEventListener("keydown", function(k) 
+        {
+        if([32, 37, 38, 39, 40].indexOf(k.keyCode) > -1)
+        {
+        k.preventDefault();}
+        }, false);
+        
+        status_var = document.getElementById("Status");
+        score_var = document.getElementById("Score");
+        
+        
+        status_var.style.fontSize = 70;
+        score_var.style.fontSize = 70;
+        ;
+
+        status_var.innerHTML = "Game Not Started";
+        score_var.innerHTML = "Score: " + total_score;
+    
+        playSnakeGame();
+        new_red_box();
+    }
+    
+    
+       
+    function playSnakeGame() {
+        
+        if(checkBounds())
+        
+        {    gameOver = true;
+            status_var.innerHTML = "Game Over";
+          
+            return;
+        }
+        
+        
+        
+        if(gameStarted && !game_paused)
+        
+        {
+            status_var.innerHTML = "Game In Progress";
+        }
+        
+        setTimeout(
+            function inner() {
+        turning = false;
+        new_canvas_frame();
+        if(!game_paused){
+            snake_moves();
+        }
+        display_snake();
+        display_red_box();
+        playSnakeGame();
+        }, 100)
+    }
+       
+    
+       
+    
+    
+
+    function checkBounds() {  
+        
+        
+        for (i = 1; i < snake_arr.length; i++) 
+        
+        {
+            //if at any time head hits a snake boy element, game is over
+            if (snake_arr[i].x === snake_arr[0].x && snake_arr[i].y === snake_arr[0].y){
+                return true;
+            }
+        }      
+        
+        var left = snake_arr[0].x < 0;
+        var right = snake_arr[0].x > myCanvas.width - 10;
+        
+        
+        var top = snake_arr[0].y < 0;
+        
+        var bottom = snake_arr[0].y > myCanvas.height - 10;
+
+        return left || right || top || bottom;   
+    }
+       
+       
+       
+    function keyPushed(evt) {
+        
+        if(turning){
+            return;
+        }
+        if(gameOver){
+            return;
+        }
+        if(!gameStarted){
+            gameStarted = true;
+        }
+        
+        turning = true;
+        
+        if (dy == -10)
+            {
+                var up = true;
+            }
+        if (dy == 10)
+            {
+                var down = true;
+            }
+        if (dx == 10)
+            {
+                var right = true;
+            }
+        if (dx == -10)
+            {
+                var left = true;
+            }
+        
+        switch (evt.keyCode) {
+                
+            case 37: // Left arrow
+            if(!right && !game_paused){
+                dx = -10;
+                dy = 0;
+                current_dir=1;
+            }
+            break;
+
+            case 38: // up arrow
+            if(!down && !game_paused)
+            {
+                dx = 0;
+                dy = -10;
+                current_dir=3;
+            }
+            break;
+
+            case 39: // Right arrow
+            if(!left && !game_paused)
+            {
+                dx = 10;
+                dy = 0;
+                current_dir=2;
+            }
+            break;
+
+            case 40: // down arrow
+            if(!up && !game_paused)
+            {
+                dx = 0;
+                dy = 10;
+                current_dir=4;
+            }
+            break;
+
+            case 32: // Space
+                
+                if(game_paused){
+                    game_paused =false;
+                    status_var.innerHTML = "Game is IN Progress";
+                }
+                else{
+                    game_paused=true;
+                    status_var.innerHTML = "Game is Paused";
+                }
+                       
+        }
+    }
+ 
+       
+    function display_snake(){
+         //alert("trying");
+        for (j = 0; j < snake_arr.length; j++)
+        {
+           display_box_element(snake_arr[j]);
+        }        
+    }
+       
+    function new_red_box() {
+        redbox_X = random_coor(0, myCanvas.width - 10);
+        redbox_Y = random_coor(0, myCanvas.height - 10);
+
+        snake_arr.forEach(function check_overlap(element_box) {
+        var check_overlap = element_box.x == redbox_X && element_box.y == redbox_Y;
+        if (check_overlap)
+        new_red_box();
+        });
+    }
+    function display_red_box(){
+        
+        
+        ctx.fillStyle = "red";
+        ctx.fillRect(redbox_X, redbox_Y, 10, 10);
+    }
+
+    function new_canvas_frame() {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, myCanvas.width, myCanvas.height);
+    }
+
+       
+       
+       
+       
+    function snake_moves(){
+        
+        
+        new_snake_head = {x: snake_arr[0].x + dx, y: snake_arr[0].y + dy};
+        snake_arr.unshift(new_snake_head);
+        offset_x=0;
+        offset_y=0;
+        
+        switch(current_dir){
+            case 1://left
+                offset_x=10;
+                offset_y=0;
+                break;
+                
+            case 2://right
+                offset_x=-10;
+                offset_y=0;
+                break;
+                
+            case 3: //up
+                offset_x=0;
+                offset_y=-10;
+                break;
+                
+            case 4:
+                offset_x=0;
+                offset_y=10;
+        }
+        if(snake_arr[0].x == redbox_X && snake_arr[0].y == redbox_Y)
+        {         
+            var box_consumed = true;
+        }
+        
+        
+        if (box_consumed) {
+            total_score += 1;
+            document.getElementById("Score").innerHTML = "Score: " + total_score;
+            for(i = 0; i < 4; i++){
+                tail_element = snake_arr[snake_arr.length - 1];
+                tail_element.x = tail_element + offset_x;
+                tail_element.y = tail_element + offset_y;
+                snake_arr.push(tail_element);
+            }
+            new_red_box();
+        } 
+        else {
+            snake_arr.pop(); 
+        }
+    }
+    
+       
+       
+       
+       
+       
+    function display_box_element(element) {
+       
+        ctx.fillStyle = "green";
+        ctx.strokestyle = "darkgreen";
+        
+        ctx.strokeRect(element.x, element.y, 10, 10);
+        ctx.fillRect(element.x, element.y, 10, 10);
+    }
+       
+       
+    function random_coor(min, max)
+       {
+        return Math.round((Math.random() * (max-min) + min) / 10) * 10;
+    }
+
+    
+    </script> 
+</html>
